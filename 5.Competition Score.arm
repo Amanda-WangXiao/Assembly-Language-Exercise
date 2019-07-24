@@ -1,0 +1,141 @@
+DATA  SEGMENT
+    STRING   DB   13, 10, 'Please  iuput  number_1 : $'
+    STRING2  DB   13, 10, 'The  average  is : $'
+    MESSAGE    DB "error!!!",0AH,0DH,'$'
+    NUM      DB   7 DUP (?)
+    MAX      DB   0
+    MIN      DB   100
+    N_SUM    DW   ?
+    NUM_X    DB   ?
+DATA  ENDS
+
+STACKS SEGMENT
+    ;此处输入堆栈段代码
+STACKS ENDS
+
+CODE SEGMENT
+    ASSUME  CS:CODE, DS:DATA
+
+START:
+    MOV   AX, DATA
+    MOV   DS, AX
+    MOV   CX, 7
+    MOV   SI, 0
+IN_X:
+    MOV   DX, OFFSET STRING
+    MOV   AH, 9    
+    INT   21H
+    CALL  INPUT
+    MOV   NUM[SI], BL
+    INC   SI
+    INC   STRING + 24
+    LOOP  IN_X
+
+    CALL  SUM
+    MOV   N_SUM, BX
+    MOV   AL, MAX
+    MOV   AH, 0
+    SUB   BX, AX
+    MOV   AL, MIN
+    MOV   AH, 0
+    SUB   BX, AX
+    MOV   AX, 5
+    XCHG  AX, BX
+    DIV   BL
+    MOV   NUM_X, AH     ;商：AL 余数：AH
+    MOV   AH, 0
+    XCHG  AX, BX
+    
+    MOV   DX, OFFSET STRING2
+    MOV   AH, 9       
+    INT   21H
+    CALL  OUTPUT
+    CALL  OUTPUT2
+    
+EXIT:
+    MOV   AH, 4CH
+    INT   21H
+
+SUM:
+    MOV   BX, 0
+    MOV   CX, 7
+    MOV   SI, 0
+LP1:
+    MOV   AL, NUM[SI]
+    CMP   AL, MAX
+    JB    LP2
+    MOV   MAX, AL
+LP2:
+    CMP   AL, MIN
+    JA    HE
+    MOV   MIN, AL
+HE:
+    MOV   AH, 0
+    ADD   BX, AX
+    INC   SI
+    LOOP  LP1
+    RET
+
+INPUT:
+    PUSH  CX
+    MOV   BX, 0
+    MOV   CX, 2
+IN_1:
+    MOV   AH, 1
+    INT   21H
+    CMP   AL, 13    ;空格
+    JZ    IN_END
+    CMP   AL, '0'
+    JB    ERROR
+    CMP   AL, '9'
+    JA    ERROR
+    AND   AL, 0FH   ;高4位清零
+    MOV   AH, 0
+    XCHG  AX, BX
+    MOV   DL, 10
+    MUL   DL        ;积：AX
+    ADD   AX, BX
+    XCHG  AX, BX
+    LOOP  IN_1
+IN_END:
+    POP   CX
+    RET
+
+OUTPUT2:
+    MOV   AH, 02H
+    MOV   DL, '.'  ;小数点
+    INT   21H
+    MOV   AL, NUM_X
+    MOV   BL, 10
+    MUL   BL
+    MOV   BL, 5
+    DIV   BL
+    MOV   NUM_X, AH
+    ADD   AL, '0'
+    MOV   DL, AL
+    MOV   AH, 2
+    INT   21H
+    RET
+
+OUTPUT:
+    MOV   AX, BX
+    MOV   BL, 10
+    DIV   BL
+    ADD   AX, 3030H
+    MOV   DX, AX
+    MOV   AH, 2
+    INT   21H
+    MOV   DL, DH
+    INT   21H
+    RET
+
+ERROR:
+    MOV DL,0AH    ;回车
+    MOV AH,2
+    INT 21H 
+    MOV DX,OFFSET MESSAGE   ;输入提示
+    MOV AH,09
+    INT 21H    
+    
+CODE  ENDS
+    END START

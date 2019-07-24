@@ -1,0 +1,118 @@
+DATAS SEGMENT
+     
+    MESSAGE    DB "PLEASE INPUT A NUMBER:",0AH,0DH,'$'
+    MESSAGE2    DB "error!!!",0AH,0DH,'$'
+    A DB 1
+    B DB ?
+    N DB ?
+    RESULT DB ?
+    ;此处输入数据段代码 
+DATAS ENDS
+
+STACKS SEGMENT
+    ;此处输入堆栈段代码
+STACKS ENDS
+
+CODES SEGMENT
+    ASSUME CS:CODES,DS:DATAS,SS:STACKS
+START:
+    MOV AX,DATAS
+    MOV DS,AX
+    
+    MOV DX,OFFSET MESSAGE   ;输入提示
+    MOV AH,09
+    INT 21H           
+   
+    MOV AH,1      
+    INT 21H       
+    MOV RESULT,AL
+    
+    CMP AL,30H
+    JB  ERROR
+    CMP AL,3AH
+    JA  ERROR
+    
+    
+    MOV AL,RESULT
+    SUB AL,30h    
+    MOV N,AL      
+    INT 21H  
+    
+l1:
+    MOV AL,A
+    MOV CL,AL     ;控制
+    MOV B,1       ;从1开始
+
+lop:
+    ADD B,30h     ;将数字转成字符
+    MOV DL,B     
+    MOV AH,2      
+    INT 21H       
+    
+    MOV DL,'*'
+    MOV AH,2 
+    INT 21H       
+   
+    ADD A,30h
+    MOV DL,A    
+    MOV AH,2      
+    INT 21H       
+    
+    MOV DL,'='
+    MOV AH,2 
+    INT 21H       
+    
+    SUB A,30h     
+    SUB B,30h     
+    MOV AL,A      
+    MOV BL,B      
+    MUL BL        ;积:AL
+    
+    MOV BL,10        
+    DIV BL        ;商：AL 余数：AH
+    
+    MOV BH,AL     ;商
+    MOV BL,AH     ;余数
+    ADD BX,3030h  ;分别将AL,AH转化成数字
+    
+    CMP BH,30h    ;判断商是否为0
+    JE l2         ;相等跳转
+    
+    MOV DL,BH     ;输出商
+    MOV AH,2
+    INT 21H
+
+l2:
+    MOV DL,BL     ;输出余数
+    MOV AH,2
+    INT 21H
+    
+    MOV DL,' '
+    MOV AH,2
+    INT 21H
+    
+    INC B         
+    
+    LOOP lop
+    
+    MOV DL,0AH    ;回车
+    MOV AH,2
+    INT 21H
+    
+    INC A
+    MOV AL,N 
+    CMP A,AL      ;判断是否到达输入的数
+    JBE l1        ;行数<=输入数
+    JMP EXIT
+    
+ERROR:
+    INT 21H 
+    MOV DX,OFFSET MESSAGE2   ;输入提示
+    MOV AH,09
+    INT 21H    
+        
+    ;此处输入代码段代码
+EXIT:    MOV AH,4CH
+    INT 21H
+CODES ENDS
+    END START

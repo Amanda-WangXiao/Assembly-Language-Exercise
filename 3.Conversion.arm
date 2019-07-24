@@ -1,0 +1,308 @@
+DATAS SEGMENT
+    MESSAGE    DB "PLEASE CHOOSE A FUNCTION:",0AH,0DH,'$'
+    MESSAGE2   DB "error!!!",0AH,0DH,'$'
+    MSG1       DB "1: Lowercase to Uppercase",0AH,0DH,'$'
+    MSG2       DB "2: Uppercase to lowercase",0AH,0DH,'$'
+    MSG3       DB "3: Binary    to Hex       ",0AH,0DH,'$'
+    MSG4       DB "4: Hex       to Binary    ",0AH,0DH,'$'  
+    MSG5       DB "5: Hex       to Decimal    ",0AH,0DH,'$'
+    
+    STR1       DB "PLEASE INPUTE A LETTER:   ",0AH,0DH,'$'
+    STR2       DB "PLEASE INPUTE A NUMBER:   ",0AH,0DH,'$'
+    STRRESULT  DB "RESULT IS :   ",0AH,0DH,'$'
+    
+    RESULT     DB ?
+    
+DATAS ENDS
+
+STACKS SEGMENT
+    
+    ;此处输入堆栈段代码
+STACKS ENDS
+
+CODES SEGMENT
+    ASSUME CS:CODES,DS:DATAS,SS:STACKS
+START:
+    MOV AX,DATAS
+    MOV DS,AX
+    
+    MOV DX,OFFSET MESSAGE
+    MOV AH,09
+    INT 21H
+    MOV DX,OFFSET MSG1
+    MOV AH,09
+    INT 21H
+    MOV DX,OFFSET MSG2
+    MOV AH,09
+    INT 21H
+    MOV DX,OFFSET MSG3
+    MOV AH,09
+    INT 21H
+    MOV DX,OFFSET MSG4
+    MOV AH,09
+    INT 21H
+    MOV DX,OFFSET MSG5
+    MOV AH,09
+    INT 21H
+    
+    
+    MOV AH,01
+    INT 21H
+    
+    CMP AL,'1'
+    JZ FLAG1
+    CMP AL,'2'
+    JZ FLAG2
+    CMP AL,'3'
+    JZ FLAG3
+    CMP AL,'4'
+    JZ FLAG4
+    CMP AL,'5'
+    JZ FLAG5
+    
+    JMP ERROR ;输入其他报错
+ 
+    
+    FLAG1:
+    INT 21H
+    MOV DX,OFFSET STR1
+    MOV AH,09
+    INT 21H
+    
+    MOV AH,01
+    INT 21H
+    CMP  AL,61H
+    JB   ERROR
+    CMP  AL,7AH
+    JA   ERROR
+    
+    SUB  AL,20H
+    MOV  RESULT,AL
+    
+    CALL SHOW_RESULT
+    
+    FLAG2:
+    INT 21H
+    MOV DX,OFFSET STR1
+    MOV AH,09
+    INT 21H
+    
+    MOV AH,01
+    INT 21H
+    CMP  AL,41H
+    JB   ERROR
+    CMP  AL,5AH
+    JA   ERROR
+    
+    ADD  AL,20H
+    MOV  RESULT,AL
+    
+    CALL SHOW_RESULT
+    
+    FLAG3:
+    
+    INT 21H
+    MOV DX,OFFSET STR2
+    MOV AH,09
+    INT 21H
+    
+    
+    CALL BtoH
+
+
+    
+    FLAG4:
+    INT 21H
+    MOV DX,OFFSET STR2
+    MOV AH,09
+    INT 21H
+    MOV AH,1
+    INT 21H
+    MOV  RESULT,AL
+    INT 21H
+    CALL HtoB
+    
+    FLAG5:
+    INT 21H
+    MOV DX,OFFSET STR2
+    MOV AH,09
+    INT 21H
+    
+    MOV AH,1
+    INT 21H
+    MOV BL,AL
+    CALL HtoD
+    
+    
+SHOW_RESULT PROC
+    INT 21H
+    MOV DX,OFFSET STRRESULT
+    MOV AH,09
+    INT 21H
+    MOV DL,RESULT
+    MOV AH,02
+    INT 21H
+    JMP EXIT
+SHOW_RESULT ENDP    
+
+
+BtoH PROC
+    MOV DH,4
+    MOV BL,0
+ACTI:
+    MOV AH,1
+    INT 21H
+    CMP AL,30H
+    JB ERROR
+    CMP AL,31H
+    JA ERROR
+    SUB AL,30H
+    SHL BL,1
+    ADD BL,AL
+    DEC DH
+    JZ CHANGE
+    JMP ACTI  
+CHANGE:
+    MOV DL,0AH    ;回车
+    MOV AH,2
+    INT 21H
+    ADD BL,30H  
+    CMP BL,39H
+    JA OTH
+    MOV DL,BL
+    MOV AH,2
+    INT 21H
+    JMP EXIT
+   
+OTH:
+    ADD BL,07H
+    MOV DL,BL
+    MOV AH,2
+    INT 21H
+    JMP EXIT
+
+    
+BtoH ENDP
+
+
+
+
+
+
+
+
+HtoB PROC
+    MOV AL,RESULT
+    MOV CL,4 ;一次左移位数  
+    MOV BX,0 ;记录左移之后的数字  
+    MOV DH,4 ;输出4位二进制数字控制  
+   
+INPUT:  
+    
+    CMP AL,30H  
+    JB ERROR1 ;比0小则退出  
+    CMP AL,39H  
+    JA COMPARE ;比9大则判断与A的大小  
+      
+    JMP RESULT1  ;输入的是0-9之间的数字
+COMPARE:  
+    CMP AL,41H ;判断与A的大小  
+    JB ERROR1 ;若小于A则退出  
+    CMP AL,46H ;判断与F的大小  
+    JA ERROR1 ;若比F大则退出
+    JMP RESULT2 ;进行到这一步则说明输入的是A-F，转换成二进制  
+
+RESULT1:  
+    SUB AL,30H ;转换成0-9  
+    OR BL,AL ; 进行或运算得到四位二进制    
+    SHL BL,CL ;左移四位   
+    JMP PRINT  
+RESULT2:  
+    SUB AL,37H ;此时AL中是A-F，减去37H是0AH，0BH...0FH  
+    OR BL,AL  
+    SHL BL,CL 
+    JMP PRINT
+ 
+PRINT: 
+    SHL BL,1   
+    JNC JINWEI ;判断进位，如果是0 跳到JINWEI
+    MOV DL,'1' ;输出1  
+    MOV AH,02H  
+    INT 21H  
+    DEC DH  
+    JZ EXIT  
+    JMP PRINT  
+    
+JINWEI:  
+    MOV DL,'0' ;输出0  
+    MOV AH,02H  
+    INT 21H  
+    DEC DH   
+    JZ EXIT  
+    JMP PRINT  
+HtoB ENDP
+
+
+
+
+HtoD PROC
+   
+    CMP AL,30H
+    JB ERROR
+    CMP AL,39H
+    JA oth
+    MOV BL,AL
+    MOV DL,0AH    ;回车
+    MOV AH,02H
+    INT 21H
+    MOV DL,BL
+    MOV AH,2
+    INT 21H
+    JMP EXIT
+
+    
+    oth:
+    CMP AL,41H
+
+    CMP AL,46H
+    JA ERROR
+    MOV BL,10
+    DIV BL
+    MOV BL,AH
+    SUB BL,1
+    MOV BH,1
+    ADD BX,3030H
+    MOV DL,0AH    ;回车
+    MOV AH,02H
+    INT 21H
+    MOV DL,BH
+    MOV AH,2
+    INT 21H
+    MOV Dl,BL
+    MOV AH,2
+    INT 21H
+    JMP EXIT 
+
+
+HtoD ENDP
+
+
+ERROR:
+    INT 21H 
+    MOV DX,OFFSET MESSAGE2   ;输入提示
+    MOV AH,09
+    INT 21H    
+    JMP EXIT
+    
+ERROR1:
+    MOV DX,OFFSET MESSAGE2   ;输入提示
+    MOV AH,09
+    INT 21H    
+    JMP EXIT
+    ;此处输入代码段代码
+EXIT:
+    MOV AH,4CH
+    INT 21H
+CODES ENDS
+    END START
+

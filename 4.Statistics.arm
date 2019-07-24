@@ -1,0 +1,136 @@
+DATA SEGMENT
+    NUM   DB 100                ;准备接收100个字符.
+    NNN   DB ?                  ;用于存放实际输入的个数.
+    BUFFER   DB 100 DUP(?)         ;100字节的空间.
+    N_N   DB ?
+    S_N   DB ?
+    C_N   DB ?
+    O_N   DB ?
+    MESSAGE  DB  13, 10, 'Input STR  : $   ' ;用于提示.
+    MES_C  DB  13, 10, 'Char  N is : $   ' ;用于提示.
+    MES_S  DB  13, 10, 'Space N is : $   ' ;用于提示.
+    MES_N  DB  13, 10, 'Num   N is : $   ' ;用于提示.
+    MES_O  DB  13, 10, 'Other N is : $   ' ;用于提示.
+    MES_A  DB  13, 10, 'All   N is : $   ' ;用于提示.
+DATA ENDS
+
+CODE SEGMENT
+    ASSUME  CS:CODE, DS:DATA
+START:
+    MOV  AX, DATA
+    MOV  DS, AX
+    
+    MOV  N_N, 0
+    MOV  S_N, 0
+    MOV  C_N, 0
+    MOV  O_N, 0
+    
+    MOV  DX, OFFSET MESSAGE
+    MOV  AH, 9                  ;提示输入
+    INT  21H
+    
+    MOV  DX, OFFSET NUM
+    MOV  AH, 10             
+    INT  21H
+
+    MOV  CL, NNN             ;收到字符的个数.
+    CMP  CL, 0
+    JNZ  ZIFU
+    JMP  EXIT
+
+ZIFU:
+    LEA  SI, BUFFER            ;收到字符的起始地址.
+
+AGAIN:
+    MOV  AL, [SI]
+    CMP  AL, ' '             ;- ' '
+    JNZ  N_num               ;
+    INC  S_N
+    JMP  NEXT
+
+N_num:
+    CMP  AL, ':'             ;- ':'
+    JNC  N_C_B               ;> '9'
+    CMP  AL, '0'
+    JC   N_C_B               ;< '0'
+    INC  N_N                 ;数字个数加一.
+    JMP  NEXT
+
+N_C_B:
+    CMP  AL, '['             ;- '['
+    JNC  N_C                 ;> 'Z'
+    CMP  AL, 'A'
+    JC   N_C                 ;< 'A'
+    INC  C_N                 ;大写，加一.
+    JMP  NEXT
+
+N_C:
+    CMP  AL, '{'             ;- '{'
+    JNC  OTHER               ;> 'z'
+    CMP  AL, 'a'
+    JC   OTHER               ;< 'a'
+    INC  C_N                 ;小写，加一.
+    JMP  NEXT
+
+OTHER:
+    INC  O_N                 ;其它.
+
+NEXT:
+
+    INC  SI
+    LOOP AGAIN
+
+    MOV  DX, OFFSET MES_N
+    MOV  AH, 9               
+    INT  21H
+    MOV  AL,  N_N
+    MOV  DL,AL
+    ADD  DL,30H
+    MOV  AH, 2
+    INT  21H
+    
+    MOV  DX, OFFSET MES_S
+    MOV  AH, 9               
+    INT  21H
+    MOV  AL,  S_N
+    MOV  DL,AL
+    ADD  DL,30H
+    MOV  AH, 2
+    INT  21H
+    
+    MOV  DX, OFFSET MES_C
+    MOV  AH, 9               
+    INT  21H
+    MOV  AL,  C_N
+    MOV  DL,AL
+    ADD  DL,30H
+    MOV  AH, 2
+    INT  21H
+    
+    MOV  DX, OFFSET MES_O
+    MOV  AH, 9               
+    INT  21H
+    MOV  AL,  O_N
+    MOV  DL,AL
+    ADD  DL,30H
+    MOV  AH, 2
+    INT  21H
+    
+    MOV  DX, OFFSET MES_A
+    MOV  AH, 9               
+    INT  21H
+    MOV  AL,  NNN
+    MOV  DL,AL
+    ADD  DL,30H
+    MOV  AH, 2
+    INT  21H
+
+EXIT:
+    MOV  AH, 4CH
+    INT  21H
+
+
+CODE  ENDS
+    END START
+
+

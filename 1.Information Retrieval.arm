@@ -1,0 +1,93 @@
+DATAS SEGMENT
+    
+     MESSAGE DB 'PLEASE INPUT A NUMBER:',0AH,0DH,'$'
+     MESSAGE2    DB "error!!!",0AH,0DH,'$'
+     STRING0 DB 'This is 0',0AH,0DH,'$'
+     STRING1 DB 'This is 1',0AH,0DH,'$'
+     STRING2 DB 'This is 2',0AH,0DH,'$'
+     STRING3 DB 'This is 3',0AH,0DH,'$'
+     STRING4 DB 'This is 4',0AH,0DH,'$'
+     STRING5 DB 'This is 5',0AH,0DH,'$'
+     STRING6 DB 'This is 6',0AH,0DH,'$'
+     STRING7 DB 'This is 7',0AH,0DH,'$'
+     STRING8 DB 'This is 8',0AH,0DH,'$'
+    ;此处输入数据段代码  
+DATAS ENDS
+
+STACKS SEGMENT 
+    ;此处输入堆栈段代码
+STACKS ENDS
+
+CODES SEGMENT
+    ASSUME CS:CODES,DS:DATAS,SS:STACKS
+START:
+    MOV AX,DATAS
+    MOV DS,AX
+    
+    MOV DX,OFFSET MESSAGE
+    MOV AH,09
+    INT 21H
+    
+    MOV AH,01
+    INT 21H
+   
+    
+    CMP AL,'0'
+    JZ FLAG1
+    CMP AL,'1'
+    JZ FLAG2
+    CMP AL,'2'
+    JZ FLAG3
+    CMP AL,'3'
+    JZ FLAG4
+    CMP AL,'4'
+    JZ FLAG5
+    CMP AL,'5'
+    JZ FLAG6
+    CMP AL,'6'
+    JZ FLAG7
+    CMP AL,'7'
+    JZ FLAG8
+    CMP AL,'8'
+    JZ FLAG9
+    
+    JMP ERROR 
+    
+    FLAG1:MOV DX,OFFSET STRING0
+    JMP SHOW
+    FLAG2:MOV DX,OFFSET STRING1
+    JMP SHOW
+    FLAG3:MOV DX,OFFSET STRING2
+    JMP SHOW
+    FLAG4:MOV DX,OFFSET STRING3
+    JMP SHOW
+    FLAG5:MOV DX,OFFSET STRING4
+    JMP SHOW
+    FLAG6:MOV DX,OFFSET STRING5
+    JMP SHOW
+    FLAG7:MOV DX,OFFSET STRING6
+    JMP SHOW
+    FLAG8:MOV DX,OFFSET STRING7
+    JMP SHOW
+    FLAG9:MOV DX,OFFSET STRING8
+    JMP SHOW
+ 
+ 
+    SHOW:
+    INT 21H
+    MOV AH,09
+    INT 21H
+    JMP EXIT
+     
+    ERROR:
+    INT 21H 
+    MOV DX,OFFSET MESSAGE2   ;输入提示
+    MOV AH,09
+    INT 21H    
+    
+    ;此处输入代码段代码
+EXIT:    
+    MOV AH,4CH
+    INT 21H
+CODES ENDS
+    END START
