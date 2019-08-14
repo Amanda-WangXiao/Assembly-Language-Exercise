@@ -20,7 +20,7 @@ Statistical character count. Enter a line of characters from the keyboard, count
 统计字符数。从键盘输入一行字符，统计字母、空格、数字、其他字符的个数，并显示。要求：提示输入一行字符串； 键盘输入字符串，Enter 键结束输入，并换行显示结果。  
   
 5.Competition Score  
-Write a game scoring program. There are seven judges, scoring according to the percentage system. The scoring principle is to get rid of the highest score and the lowest score and to find the average. Requirement:  
+Write a game scoring program. There are seven judges, scoring according to the percentage system. The scoring principle is to get rid of the highest score and the lowest score and to find the average. Requirements:  
 (1) The judges'scores are entered from the keyboard in decimal system.  
 (2) The score is given in decimal system, and one decimal digit is reserved.  
 (3) There should be corresponding prompts on the screen when I input and output.  
